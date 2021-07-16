@@ -25,21 +25,31 @@ repository = "https://github.com/RustCrypto/hashes"
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+
 [dependencies.block-buffer]
+path = "../block-buffer"
 version = "0.9"
 
 [dependencies.cfg-if]
+git = "https://github.com/sgx-test/packed_simd-sgx.git"
 version = "1.0"
 
 [dependencies.digest]
+git = "https://github.com/sgx-test/digest-sgx"
 version = "0.9"
 
 [dependencies.opaque-debug]
+path = "../opaque-debug"
 version = "0.3"
 
 [dependencies.sha2-asm]
+path = "../sha2-asm"
 version = "0.6.1"
 optional = true
+
 [dev-dependencies.digest]
 version = "0.9"
 features = ["dev"]

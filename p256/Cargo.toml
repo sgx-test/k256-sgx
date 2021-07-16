@@ -26,19 +26,23 @@ repository = "https://github.com/RustCrypto/elliptic-curves/tree/master/p256"
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 [dependencies.ecdsa-core]
+path = "../ecdsa"
 version = "0.8"
 optional = true
 default-features = false
 package = "ecdsa"
 
 [dependencies.elliptic-curve]
+path = "../elliptic-curve"
 version = "0.6"
 default-features = false
 
 [dependencies.sha2]
+path = "../sha2"
 version = "0.9"
 optional = true
 default-features = false
+
 [dev-dependencies.ecdsa-core]
 version = "0.8"
 features = ["dev"]
@@ -60,7 +64,7 @@ features = ["getrandom"]
 
 [features]
 arithmetic = ["elliptic-curve/arithmetic"]
-default = ["arithmetic", "std"]
+default = ["arithmetic"] # "std"
 digest = ["elliptic-curve/digest", "ecdsa-core/digest"]
 ecdh = ["elliptic-curve/ecdh", "zeroize"]
 ecdsa = ["arithmetic", "ecdsa-core/sign", "ecdsa-core/verify", "sha256", "zeroize"]

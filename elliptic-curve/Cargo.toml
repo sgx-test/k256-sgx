@@ -24,43 +24,55 @@ repository = "https://github.com/RustCrypto/traits/tree/master/elliptic-curve"
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+
 [dependencies.bitvec]
+git = "https://github.com/mesalock-linux/bitvec-sgx"
 version = "0.18"
 optional = true
 default-features = false
 
 [dependencies.digest]
+git = "https://github.com/sgx-test/digest-sgx"
 version = "0.9"
 optional = true
 
 [dependencies.ff]
+path = "../ff"
 version = "0.8"
 optional = true
 default-features = false
 
 [dependencies.generic-array]
+git = "https://github.com/sgx-test/digest-sgx"
 version = "0.14"
 default-features = false
 
 [dependencies.group]
+path = "../group"
 version = "0.8"
 optional = true
 default-features = false
 
 [dependencies.oid]
-version = "0.1"
+path = "../oid"
 optional = true
 package = "const-oid"
 
 [dependencies.rand_core]
+git = "https://github.com/mesalock-linux/rand-sgx"
 version = "0.5"
 default-features = false
 
 [dependencies.subtle]
+git = "https://github.com/mesalock-linux/subtle-sgx"
 version = "2.3"
 default-features = false
 
 [dependencies.zeroize]
+git = "https://github.com/sgx-test/ff-zeroize-sgx"
 version = "1"
 optional = true
 default-features = false
