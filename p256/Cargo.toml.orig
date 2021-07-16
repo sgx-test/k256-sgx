@@ -1,0 +1,44 @@
+[package]
+name = "p256"
+description = """
+Pure Rust implementation of the NIST P-256 (a.k.a. secp256r1, prime256v1)
+elliptic curve with support for ECDH, ECDSA signing/verification, and general
+purpose curve arithmetic
+"""
+version = "0.5.2"
+authors = ["RustCrypto Developers"]
+license = "Apache-2.0 OR MIT"
+documentation = "https://docs.rs/elliptic-curve"
+repository = "https://github.com/RustCrypto/elliptic-curves/tree/master/p256"
+readme = "README.md"
+edition = "2018"
+categories = ["cryptography", "no-std"]
+keywords = ["crypto", "ecc", "nist", "prime256v1", "secp256r1"]
+
+[dependencies]
+ecdsa-core = { version = "0.8", package = "ecdsa", optional = true, default-features = false }
+elliptic-curve = { version = "0.6", default-features = false }
+sha2 = { version = "0.9", optional = true, default-features = false }
+
+[dev-dependencies]
+ecdsa-core = { version = "0.8", package = "ecdsa", default-features = false, features = ["dev"] }
+hex = "0.4" # TODO: switch to hex-literal
+hex-literal = "0.3"
+proptest = "0.10"
+rand_core = { version = "0.5", features = ["getrandom"] }
+
+[features]
+default = ["arithmetic", "std"]
+arithmetic = ["elliptic-curve/arithmetic"]
+digest = ["elliptic-curve/digest", "ecdsa-core/digest"]
+ecdh = ["elliptic-curve/ecdh", "zeroize"]
+ecdsa = ["arithmetic", "ecdsa-core/sign", "ecdsa-core/verify", "sha256", "zeroize"]
+oid = ["elliptic-curve/oid"]
+sha256 = ["digest", "ecdsa-core/hazmat", "sha2"]
+test-vectors = []
+std = ["elliptic-curve/std"]
+zeroize = ["elliptic-curve/zeroize"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
