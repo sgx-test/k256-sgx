@@ -53,9 +53,9 @@ version = "0.2"
 optional = true
 
 [dependencies.subtle]
-git = "https://github.com/mesalock-linux/subtle-sgx"
-version = "2.2.1"
-default-features = false
+git = "https://github.com/sgx-test/subtle-sgx"
+version = "2.3"
+branch = "2.3-sgx1.1.3"
 
 [features]
 alloc = ["byteorder"]

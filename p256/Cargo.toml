@@ -25,16 +25,23 @@ repository = "https://github.com/RustCrypto/elliptic-curves/tree/master/p256"
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+
+
 [dependencies.ecdsa-core]
 path = "../ecdsa"
 version = "0.8"
 optional = true
 default-features = false
+features = ["mesalock_sgx"]
 package = "ecdsa"
 
 [dependencies.elliptic-curve]
 path = "../elliptic-curve"
 version = "0.6"
+features = ["mesalock_sgx"]
 default-features = false
 
 [dependencies.sha2]
@@ -43,24 +50,24 @@ version = "0.9"
 optional = true
 default-features = false
 
-[dev-dependencies.ecdsa-core]
-version = "0.8"
-features = ["dev"]
-default-features = false
-package = "ecdsa"
+#[dev-dependencies.ecdsa-core]
+#version = "0.8"
+#features = ["dev"]
+#default-features = false
+#package = "ecdsa"
 
-[dev-dependencies.hex]
-version = "0.4"
+#[dev-dependencies.hex]
+#version = "0.4"
 
-[dev-dependencies.hex-literal]
-version = "0.3"
+#[dev-dependencies.hex-literal]
+#version = "0.3"
 
-[dev-dependencies.proptest]
-version = "0.10"
+#[dev-dependencies.proptest]
+#version = "0.10"
 
-[dev-dependencies.rand_core]
-version = "0.5"
-features = ["getrandom"]
+#[dev-dependencies.rand_core]
+#version = "0.5"
+#features = ["getrandom"]
 
 [features]
 arithmetic = ["elliptic-curve/arithmetic"]
@@ -73,3 +80,4 @@ sha256 = ["digest", "ecdsa-core/hazmat", "sha2"]
 std = ["elliptic-curve/std"]
 test-vectors = []
 zeroize = ["elliptic-curve/zeroize"]
+mesalock_sgx = ["sgx_tstd"]

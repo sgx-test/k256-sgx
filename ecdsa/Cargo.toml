@@ -24,8 +24,14 @@ repository = "https://github.com/RustCrypto/signatures"
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+
 [dependencies.elliptic-curve]
+path = "../elliptic-curve"
 version = "0.6"
+features = ["mesalock_sgx"]
 default-features = false
 
 [dependencies.hmac]
@@ -37,12 +43,13 @@ default-features = false
 version = ">= 1.2.2, < 1.3.0"
 features = ["rand-preview"]
 default-features = false
-[dev-dependencies.hex-literal]
-version = "0.2"
 
-[dev-dependencies.sha2]
-version = "0.9"
-default-features = false
+#[dev-dependencies.hex-literal]
+#version = "0.2"
+
+#[dev-dependencies.sha2]
+#version = "0.9"
+#default-features = false
 
 [features]
 alloc = []
@@ -55,3 +62,4 @@ sign = ["arithmetic", "digest", "hazmat", "hmac", "zeroize"]
 std = ["alloc", "elliptic-curve/std", "signature/std"]
 verify = ["arithmetic", "digest", "hazmat"]
 zeroize = ["elliptic-curve/zeroize"]
+mesalock_sgx = ["sgx_tstd"]
