@@ -26,6 +26,8 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+use std::prelude::v1::*;
+
 #[cfg(feature = "alloc")]
 extern crate alloc;
 

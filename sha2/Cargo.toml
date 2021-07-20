@@ -35,10 +35,10 @@ version = "0.9"
 
 [dependencies.cfg-if]
 git = "https://github.com/sgx-test/packed_simd-sgx.git"
-version = "1.0"
+version = "0.1.0"
 
 [dependencies.digest]
-git = "https://github.com/sgx-test/digest-sgx"
+path = "../digest"
 version = "0.9"
 
 [dependencies.opaque-debug]
@@ -51,6 +51,7 @@ version = "0.6.1"
 optional = true
 
 [dev-dependencies.digest]
+path = "../digest"
 version = "0.9"
 features = ["dev"]
 
