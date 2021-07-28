@@ -50,21 +50,23 @@ path = "../sha2-asm"
 version = "0.6.1"
 optional = true
 
-[dev-dependencies.digest]
-path = "../digest"
-version = "0.9"
-features = ["dev"]
-
-[dev-dependencies.hex-literal]
-version = "0.2"
+#[dev-dependencies.digest]
+#path = "../digest"
+#version = "0.9"
+#features = ["dev"]
+#
+#[dev-dependencies.hex-literal]
+#version = "0.2"
 
 [features]
 asm = ["sha2-asm"]
 asm-aarch64 = ["asm"]
 compress = []
-default = ["std"]
+default = ["std","mesalock_sgx"]
 force-soft = []
 std = ["digest/std"]
+mesalock_sgx = ["sgx_tstd"]
+
 [target.aarch64-apple-darwin.dependencies.cpufeatures]
 version = "0.1.1"
 [target."cfg(all(target_arch = \"aarch64\", target_os = \"linux\"))".dependencies.cpufeatures]

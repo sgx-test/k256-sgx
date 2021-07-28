@@ -31,5 +31,4 @@ version = "0.2.0"
 optional = true
 
 [dependencies.generic-array]
-path = "../generic-array"
 version = "0.14"
