@@ -15,8 +15,8 @@ categories    = ["cryptography", "no-std"]
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 
 [dependencies.digest]
-git = "https://github.com/mesalock-linux/rustcrypto-traits-sgx"
-#path = "../digest"
+#git = "https://github.com/mesalock-linux/rustcrypto-traits-sgx"
+path = "../digest"
 #version = "0.9"
 optional = true
 default-features = false

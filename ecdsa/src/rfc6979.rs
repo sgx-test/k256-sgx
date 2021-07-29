@@ -3,7 +3,7 @@
 //! <https://tools.ietf.org/html/rfc6979#section-3>
 
 use elliptic_curve::{
-    digest::{BlockInput, FixedOutput, Reset, Update},
+    digest::{BlockInput, FixedOutput, Reset, Update},//Update
     ff::PrimeField,
     generic_array::GenericArray,
     ops::Invert,

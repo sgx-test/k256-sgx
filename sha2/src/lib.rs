@@ -67,8 +67,8 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
-#[cfg(feature = "std")]
-extern crate std;
+//#[cfg(feature = "std")]
+//extern crate std;
 
 mod consts;
 mod sha256;

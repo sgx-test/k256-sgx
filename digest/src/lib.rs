@@ -39,8 +39,8 @@ extern crate sgx_tstd as std;
 #[macro_use]
 extern crate alloc;
 
-#[cfg(feature = "std")]
-extern crate std;
+//#[cfg(feature = "std")]
+//extern crate std;
 
 #[cfg(feature = "dev")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dev")))]

@@ -21,7 +21,7 @@ use elliptic_curve::{
     FieldBytes, FromDigest, ProjectiveArithmetic, SecretKey,
 };
 use signature::{
-    digest::{BlockInput, Digest, FixedOutput, Reset, Update},
+    digest::{BlockInput, Digest, FixedOutput, Reset, Update }, //Update
     rand_core::{CryptoRng, RngCore},
     DigestSigner, RandomizedDigestSigner, RandomizedSigner,
 };
