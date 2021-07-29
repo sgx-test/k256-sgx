@@ -38,7 +38,8 @@ git = "https://github.com/sgx-test/packed_simd-sgx.git"
 version = "0.1.0"
 
 [dependencies.digest]
-path = "../digest"
+git = "https://github.com/mesalock-linux/rustcrypto-traits-sgx"
+#path = "../digest"
 version = "0.9"
 
 [dependencies.opaque-debug]
