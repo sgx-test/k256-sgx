@@ -23,10 +23,11 @@ elliptic-curve = { path = "../elliptic-curve", version = "0.6", features = ["mes
 #sha3 = { version = "0.9", optional = true, default-features = false }
 sha2 = { git = "https://github.com/mesalock-linux/rustcrypto-hashes-sgx", tag = "sgx_1.1.3", optional = true }
 sha3 = { git = "https://github.com/mesalock-linux/rustcrypto-hashes-sgx", tag = "sgx_1.1.3", optional = true }
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 
 [dev-dependencies]
 criterion = "0.3"
-ecdsa-core = { version = "0.8", package = "ecdsa", default-features = false, features = ["dev"] }
+#ecdsa-core = { path = "../ecdsa", package = "ecdsa", default-features = false, features = ["dev"] }
 hex = "0.4" # TODO: switch to hex-literal
 hex-literal = "0.3"
 num-bigint = "0.3"
