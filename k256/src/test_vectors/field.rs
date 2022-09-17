@@ -1,4 +1,4 @@
-//! Test vectors for the secp256r1 base field.
+//! Test vectors for the secp256k1 base field.
 
 /// Repeated doubling of the multiplicative identity.
 pub const DBL_TEST_VECTORS: &[&str] = &[

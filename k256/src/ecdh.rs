@@ -11,7 +11,7 @@
 //! ```
 //! # #[cfg(feature = "ecdh")]
 //! # {
-//! use p256::{EncodedPoint, ecdh::EphemeralSecret};
+//! use k256::{EncodedPoint, ecdh::EphemeralSecret};
 //! use rand_core::OsRng; // requires 'getrandom' feature
 //!
 //! // Alice
@@ -35,10 +35,10 @@
 //! # }
 //! ```
 
-use crate::NistP256;
+use crate::Secp256k1;
 
 /// NIST P-256 Ephemeral Diffie-Hellman Secret.
-pub type EphemeralSecret = elliptic_curve::ecdh::EphemeralSecret<NistP256>;
+pub type EphemeralSecret = elliptic_curve::ecdh::EphemeralSecret<Secp256k1>;
 
 /// Shared secret value computed via ECDH key agreement.
-pub type SharedSecret = elliptic_curve::ecdh::SharedSecret<NistP256>;
+pub type SharedSecret = elliptic_curve::ecdh::SharedSecret<Secp256k1>;

@@ -1,18 +1,17 @@
-# RustCrypto: NIST P-256 (secp256r1) elliptic curve
+# RustCrypto: K-256 (secp256k1) elliptic curve
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
-[![Project Chat][chat-image]][chat-link]
 [![Build Status][build-image]][build-link]
 
-NIST P-256 elliptic curve (a.k.a. prime256v1, secp256r1) types implemented
-in terms of traits from the [`elliptic-curve`] crate.
+K-256 elliptic curve (a.k.a. [secp256k1]) types implemented in terms of traits
+from the [`elliptic-curve`] crate.
 
 Optionally includes an [`arithmetic`] feature providing scalar and
 affine/projective point types with support for constant-time scalar
-multiplication, which can be used to implement protocols such as [ECDH].
+multiplication.
 
 [Documentation][docs-link]
 
@@ -32,18 +31,24 @@ USE AT YOUR OWN RISK!
 
 - [Elliptic Curve Diffie-Hellman (ECDH)][ECDH]: gated under the `ecdh` feature.
 - [Elliptic Curve Digital Signature Algorithm (ECDSA)][ECDSA]: gated under the
-  `ecdsa` feature.
+  `ecdsa` feature. Supports low-S normalized ECDSA signing and verification
+  as used in consensus-critical applications, and additionally supports
+  public key recovery from ECDSA signatures (as used by e.g. Ethereum).
 
-## About NIST P-256
+## About K-256 (secp256k1)
 
-NIST P-256 is a Weierstrass curve specified in FIPS 186-4: Digital Signature
-Standard (DSS):
+K-256 is a Koblitz curve typically referred to as "[secp256k1]".
+The "K-256" name follows NIST notation where P = prime fields,
+B = binary fields, and K = Koblitz curves (defined over F₂).
 
-<https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf>
+The curve is specified as `secp256k1` by Certicom's SECG in
+"SEC 2: Recommended Elliptic Curve Domain Parameters":
 
-Also known as prime256v1 (ANSI X9.62) and secp256r1 (SECG), it's included in
-the US National Security Agency's "Suite B" and is widely used in protocols
-like TLS and the associated X.509 PKI.
+<https://www.secg.org/sec2-v2.pdf>
+
+It's primarily notable for usage in Bitcoin and other cryptocurrencies,
+particularly in conjunction with the
+[Elliptic Curve Digital Signature Algorithm (ECDSA)][ECDSA].
 
 ## Minimum Supported Rust Version
 
@@ -74,20 +79,19 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/p256.svg
-[crate-link]: https://crates.io/crates/p256
-[docs-image]: https://docs.rs/p256/badge.svg
-[docs-link]: https://docs.rs/p256/
+[crate-image]: https://img.shields.io/crates/v/k256.svg
+[crate-link]: https://crates.io/crates/k256
+[docs-image]: https://docs.rs/k256/badge.svg
+[docs-link]: https://docs.rs/k256/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.44+-blue.svg
-[chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
-[chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/260040-elliptic-curves
-[build-image]: https://github.com/RustCrypto/elliptic-curves/workflows/p256/badge.svg?branch=master&event=push
-[build-link]: https://github.com/RustCrypto/elliptic-curves/actions?query=workflow%3Ap256
+[build-image]: https://github.com/RustCrypto/elliptic-curves/workflows/k256/badge.svg?branch=master&event=push
+[build-link]: https://github.com/RustCrypto/elliptic-curves/actions?query=workflow%3Ak256
 
 [//]: # (general links)
 
+[secp256k1]: https://en.bitcoin.it/wiki/Secp256k1
 [`elliptic-curve`]: https://github.com/RustCrypto/traits/tree/master/elliptic-curve
-[`arithmetic`]: https://docs.rs/p256/latest/p256/arithmetic/index.html
+[`arithmetic`]: https://docs.rs/k256/latest/k256/arithmetic/index.html
 [ECDH]: https://en.wikipedia.org/wiki/Elliptic-curve_Diffie-Hellman
 [ECDSA]: https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm

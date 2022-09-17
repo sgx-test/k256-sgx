@@ -1,10 +1,10 @@
 //! Projective points
 
-use super::{AffinePoint, FieldElement, Scalar, CURVE_EQUATION_B};
-use crate::NistP256;
+use super::{AffinePoint, FieldElement, Scalar, CURVE_EQUATION_B_SINGLE};
+use crate::Secp256k1;
 use core::{
     iter::Sum,
-    ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+    ops::{Add, AddAssign, Neg, Sub, SubAssign},
 };
 use elliptic_curve::{
     ff::Field,
@@ -14,50 +14,26 @@ use elliptic_curve::{
     subtle::{Choice, ConditionallySelectable, ConstantTimeEq},
 };
 
-impl ProjectiveArithmetic for NistP256 {
+#[rustfmt::skip]
+#[cfg(feature = "endomorphism-mul")]
+const ENDOMORPHISM_BETA: FieldElement = FieldElement::from_bytes_unchecked(&[
+    0x7a, 0xe9, 0x6a, 0x2b, 0x65, 0x7c, 0x07, 0x10,
+    0x6e, 0x64, 0x47, 0x9e, 0xac, 0x34, 0x34, 0xe9,
+    0x9c, 0xf0, 0x49, 0x75, 0x12, 0xf5, 0x89, 0x95,
+    0xc1, 0x39, 0x6c, 0x28, 0x71, 0x95, 0x01, 0xee,
+]);
+
+impl ProjectiveArithmetic for Secp256k1 {
     type ProjectivePoint = ProjectivePoint;
 }
 
-/// A point on the secp256r1 curve in projective coordinates.
+/// A point on the secp256k1 curve in projective coordinates.
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(docsrs, doc(cfg(feature = "arithmetic")))]
 pub struct ProjectivePoint {
     x: FieldElement,
     y: FieldElement,
     z: FieldElement,
-}
-
-impl Group for ProjectivePoint {
-    type Scalar = Scalar;
-
-    fn random(mut rng: impl RngCore) -> Self {
-        Self::generator() * Scalar::random(&mut rng)
-    }
-
-    fn identity() -> Self {
-        ProjectivePoint::identity()
-    }
-
-    fn generator() -> Self {
-        ProjectivePoint::generator()
-    }
-
-    fn is_identity(&self) -> Choice {
-        self.ct_eq(&Self::identity())
-    }
-
-    #[must_use]
-    fn double(&self) -> Self {
-        ProjectivePoint::double(self)
-    }
-}
-
-impl Curve for ProjectivePoint {
-    type AffineRepr = AffinePoint;
-
-    fn to_affine(&self) -> AffinePoint {
-        ProjectivePoint::to_affine(self)
-    }
 }
 
 impl From<AffinePoint> for ProjectivePoint {
@@ -96,7 +72,7 @@ impl PartialEq for ProjectivePoint {
 impl Eq for ProjectivePoint {}
 
 impl ProjectivePoint {
-    /// Returns the additive identity of P-256, also known as the "neutral element" or
+    /// Returns the additive identity of SECP256k1, also known as the "neutral element" or
     /// "point at infinity".
     pub const fn identity() -> ProjectivePoint {
         ProjectivePoint {
@@ -106,7 +82,7 @@ impl ProjectivePoint {
         }
     }
 
-    /// Returns the base point of P-256.
+    /// Returns the base point of SECP256k1.
     pub fn generator() -> ProjectivePoint {
         AffinePoint::generator().into()
     }
@@ -127,7 +103,7 @@ impl ProjectivePoint {
     fn neg(&self) -> ProjectivePoint {
         ProjectivePoint {
             x: self.x,
-            y: self.y.neg(),
+            y: self.y.negate(1).normalize_weak(),
             z: self.z,
         }
     }
@@ -135,92 +111,114 @@ impl ProjectivePoint {
     /// Returns `self + other`.
     fn add(&self, other: &ProjectivePoint) -> ProjectivePoint {
         // We implement the complete addition formula from Renes-Costello-Batina 2015
-        // (https://eprint.iacr.org/2015/1060 Algorithm 4). The comments after each line
-        // indicate which algorithm steps are being performed.
+        // (https://eprint.iacr.org/2015/1060 Algorithm 7).
 
-        let xx = self.x * &other.x; // 1
-        let yy = self.y * &other.y; // 2
-        let zz = self.z * &other.z; // 3
-        let xy_pairs = ((self.x + &self.y) * &(other.x + &other.y)) - &(xx + &yy); // 4, 5, 6, 7, 8
-        let yz_pairs = ((self.y + &self.z) * &(other.y + &other.z)) - &(yy + &zz); // 9, 10, 11, 12, 13
-        let xz_pairs = ((self.x + &self.z) * &(other.x + &other.z)) - &(xx + &zz); // 14, 15, 16, 17, 18
+        let xx = self.x * &other.x;
+        let yy = self.y * &other.y;
+        let zz = self.z * &other.z;
 
-        let bzz_part = xz_pairs - &(CURVE_EQUATION_B * &zz); // 19, 20
-        let bzz3_part = bzz_part.double() + &bzz_part; // 21, 22
-        let yy_m_bzz3 = yy - &bzz3_part; // 23
-        let yy_p_bzz3 = yy + &bzz3_part; // 24
+        let n_xx_yy = (xx + &yy).negate(2);
+        let n_yy_zz = (yy + &zz).negate(2);
+        let n_xx_zz = (xx + &zz).negate(2);
+        let xy_pairs = ((self.x + &self.y) * &(other.x + &other.y)) + &n_xx_yy;
+        let yz_pairs = ((self.y + &self.z) * &(other.y + &other.z)) + &n_yy_zz;
+        let xz_pairs = ((self.x + &self.z) * &(other.x + &other.z)) + &n_xx_zz;
 
-        let zz3 = zz.double() + &zz; // 26, 27
-        let bxz_part = (CURVE_EQUATION_B * &xz_pairs) - &(zz3 + &xx); // 25, 28, 29
-        let bxz3_part = bxz_part.double() + &bxz_part; // 30, 31
-        let xx3_m_zz3 = xx.double() + &xx - &zz3; // 32, 33, 34
+        let bzz = zz.mul_single(CURVE_EQUATION_B_SINGLE);
+        let bzz3 = (bzz.double() + &bzz).normalize_weak();
+
+        let yy_m_bzz3 = yy + &bzz3.negate(1);
+        let yy_p_bzz3 = yy + &bzz3;
+
+        let byz = &yz_pairs
+            .mul_single(CURVE_EQUATION_B_SINGLE)
+            .normalize_weak();
+        let byz3 = (byz.double() + byz).normalize_weak();
+
+        let xx3 = xx.double() + &xx;
+        let bxx9 = (xx3.double() + &xx3)
+            .normalize_weak()
+            .mul_single(CURVE_EQUATION_B_SINGLE)
+            .normalize_weak();
+
+        let new_x = ((xy_pairs * &yy_m_bzz3) + &(byz3 * &xz_pairs).negate(1)).normalize_weak(); // m1
+        let new_y = ((yy_p_bzz3 * &yy_m_bzz3) + &(bxx9 * &xz_pairs)).normalize_weak();
+        let new_z = ((yz_pairs * &yy_p_bzz3) + &(xx3 * &xy_pairs)).normalize_weak();
 
         ProjectivePoint {
-            x: (yy_p_bzz3 * &xy_pairs) - &(yz_pairs * &bxz3_part), // 35, 39, 40
-            y: (yy_p_bzz3 * &yy_m_bzz3) + &(xx3_m_zz3 * &bxz3_part), // 36, 37, 38
-            z: (yy_m_bzz3 * &yz_pairs) + &(xy_pairs * &xx3_m_zz3), // 41, 42, 43
+            x: new_x,
+            y: new_y,
+            z: new_z,
         }
     }
 
     /// Returns `self + other`.
     fn add_mixed(&self, other: &AffinePoint) -> ProjectivePoint {
-        // We implement the complete mixed addition formula from Renes-Costello-Batina
-        // 2015 (Algorithm 5). The comments after each line indicate which algorithm steps
-        // are being performed.
+        // We implement the complete addition formula from Renes-Costello-Batina 2015
+        // (https://eprint.iacr.org/2015/1060 Algorithm 8).
 
-        let xx = self.x * &other.x; // 1
-        let yy = self.y * &other.y; // 2
-        let xy_pairs = ((self.x + &self.y) * &(other.x + &other.y)) - &(xx + &yy); // 3, 4, 5, 6, 7
-        let yz_pairs = (other.y * &self.z) + &self.y; // 8, 9 (t4)
-        let xz_pairs = (other.x * &self.z) + &self.x; // 10, 11 (y3)
+        let xx = self.x * &other.x;
+        let yy = self.y * &other.y;
+        let xy_pairs = ((self.x + &self.y) * &(other.x + &other.y)) + &(xx + &yy).negate(2);
+        let yz_pairs = (other.y * &self.z) + &self.y;
+        let xz_pairs = (other.x * &self.z) + &self.x;
 
-        let bz_part = xz_pairs - &(CURVE_EQUATION_B * &self.z); // 12, 13
-        let bz3_part = bz_part.double() + &bz_part; // 14, 15
-        let yy_m_bzz3 = yy - &bz3_part; // 16
-        let yy_p_bzz3 = yy + &bz3_part; // 17
+        let bzz = &self.z.mul_single(CURVE_EQUATION_B_SINGLE);
+        let bzz3 = (bzz.double() + bzz).normalize_weak();
 
-        let z3 = self.z.double() + &self.z; // 19, 20
-        let bxz_part = (CURVE_EQUATION_B * &xz_pairs) - &(z3 + &xx); // 18, 21, 22
-        let bxz3_part = bxz_part.double() + &bxz_part; // 23, 24
-        let xx3_m_zz3 = xx.double() + &xx - &z3; // 25, 26, 27
+        let yy_m_bzz3 = yy + &bzz3.negate(1);
+        let yy_p_bzz3 = yy + &bzz3;
+
+        let byz = &yz_pairs
+            .mul_single(CURVE_EQUATION_B_SINGLE)
+            .normalize_weak();
+        let byz3 = (byz.double() + byz).normalize_weak();
+
+        let xx3 = xx.double() + &xx;
+        let bxx9 = &(xx3.double() + &xx3)
+            .normalize_weak()
+            .mul_single(CURVE_EQUATION_B_SINGLE)
+            .normalize_weak();
 
         ProjectivePoint {
-            x: (yy_p_bzz3 * &xy_pairs) - &(yz_pairs * &bxz3_part), // 28, 32, 33
-            y: (yy_p_bzz3 * &yy_m_bzz3) + &(xx3_m_zz3 * &bxz3_part), // 29, 30, 31
-            z: (yy_m_bzz3 * &yz_pairs) + &(xy_pairs * &xx3_m_zz3), // 34, 35, 36
+            x: ((xy_pairs * &yy_m_bzz3) + &(byz3 * &xz_pairs).negate(1)).normalize_weak(),
+            y: ((yy_p_bzz3 * &yy_m_bzz3) + &(bxx9 * &xz_pairs)).normalize_weak(),
+            z: ((yz_pairs * &yy_p_bzz3) + &(xx3 * &xy_pairs)).normalize_weak(),
         }
     }
 
     /// Doubles this point.
+    #[inline]
     pub fn double(&self) -> ProjectivePoint {
-        // We implement the exception-free point doubling formula from
-        // Renes-Costello-Batina 2015 (Algorithm 6). The comments after each line
-        // indicate which algorithm steps are being performed.
+        // We implement the complete addition formula from Renes-Costello-Batina 2015
+        // (https://eprint.iacr.org/2015/1060 Algorithm 9).
 
-        let xx = self.x.square(); // 1
-        let yy = self.y.square(); // 2
-        let zz = self.z.square(); // 3
-        let xy2 = (self.x * &self.y).double(); // 4, 5
-        let xz2 = (self.x * &self.z).double(); // 6, 7
+        let yy = self.y.square();
+        let zz = self.z.square();
+        let xy2 = (self.x * &self.y).double();
 
-        let bzz_part = (CURVE_EQUATION_B * &zz) - &xz2; // 8, 9
-        let bzz3_part = bzz_part.double() + &bzz_part; // 10, 11
-        let yy_m_bzz3 = yy - &bzz3_part; // 12
-        let yy_p_bzz3 = yy + &bzz3_part; // 13
-        let y_frag = yy_p_bzz3 * &yy_m_bzz3; // 14
-        let x_frag = yy_m_bzz3 * &xy2; // 15
+        let bzz = &zz.mul_single(CURVE_EQUATION_B_SINGLE);
+        let bzz3 = (bzz.double() + bzz).normalize_weak();
+        let bzz9 = (bzz3.double() + &bzz3).normalize_weak();
 
-        let zz3 = zz.double() + &zz; // 16, 17
-        let bxz2_part = (CURVE_EQUATION_B * &xz2) - &(zz3 + &xx); // 18, 19, 20
-        let bxz6_part = bxz2_part.double() + &bxz2_part; // 21, 22
-        let xx3_m_zz3 = xx.double() + &xx - &zz3; // 23, 24, 25
+        let yy_m_bzz9 = yy + &bzz9.negate(1);
+        let yy_p_bzz3 = yy + &bzz3;
 
-        let y = y_frag + &(xx3_m_zz3 * &bxz6_part); // 26, 27
-        let yz2 = (self.y * &self.z).double(); // 28, 29
-        let x = x_frag - &(bxz6_part * &yz2); // 30, 31
-        let z = (yz2 * &yy).double().double(); // 32, 33, 34
+        let yy_zz = yy * &zz;
+        let yy_zz8 = yy_zz.double().double().double();
+        let t = (yy_zz8.double() + &yy_zz8)
+            .normalize_weak()
+            .mul_single(CURVE_EQUATION_B_SINGLE);
 
-        ProjectivePoint { x, y, z }
+        ProjectivePoint {
+            x: xy2 * &yy_m_bzz9,
+            y: ((yy_m_bzz9 * &yy_p_bzz3) + &t).normalize_weak(),
+            z: ((yy * &self.y) * &self.z)
+                .double()
+                .double()
+                .double()
+                .normalize_weak(),
+        }
     }
 
     /// Returns `self - other`.
@@ -233,18 +231,47 @@ impl ProjectivePoint {
         self.add_mixed(&other.neg())
     }
 
-    /// Returns `[k] self`.
-    fn mul(&self, k: &Scalar) -> ProjectivePoint {
-        let mut ret = ProjectivePoint::identity();
-
-        for limb in k.0.iter().rev() {
-            for i in (0..64).rev() {
-                ret = ret.double();
-                ret.conditional_assign(&(ret + self), Choice::from(((limb >> i) & 1u64) as u8));
-            }
+    /// Calculates SECP256k1 endomorphism: `self * lambda`.
+    #[cfg(feature = "endomorphism-mul")]
+    pub fn endomorphism(&self) -> Self {
+        Self {
+            x: self.x * &ENDOMORPHISM_BETA,
+            y: self.y,
+            z: self.z,
         }
+    }
+}
 
-        ret
+impl Group for ProjectivePoint {
+    type Scalar = Scalar;
+
+    fn random(mut rng: impl RngCore) -> Self {
+        Self::generator() * Scalar::random(&mut rng)
+    }
+
+    fn identity() -> Self {
+        ProjectivePoint::identity()
+    }
+
+    fn generator() -> Self {
+        ProjectivePoint::generator()
+    }
+
+    fn is_identity(&self) -> Choice {
+        self.ct_eq(&Self::identity())
+    }
+
+    #[must_use]
+    fn double(&self) -> Self {
+        ProjectivePoint::double(self)
+    }
+}
+
+impl Curve for ProjectivePoint {
+    type AffineRepr = AffinePoint;
+
+    fn to_affine(&self) -> AffinePoint {
+        ProjectivePoint::to_affine(self)
     }
 }
 
@@ -254,19 +281,19 @@ impl Default for ProjectivePoint {
     }
 }
 
-impl Add<ProjectivePoint> for ProjectivePoint {
-    type Output = ProjectivePoint;
-
-    fn add(self, other: ProjectivePoint) -> ProjectivePoint {
-        ProjectivePoint::add(&self, &other)
-    }
-}
-
 impl Add<&ProjectivePoint> for &ProjectivePoint {
     type Output = ProjectivePoint;
 
     fn add(self, other: &ProjectivePoint) -> ProjectivePoint {
         ProjectivePoint::add(self, other)
+    }
+}
+
+impl Add<ProjectivePoint> for ProjectivePoint {
+    type Output = ProjectivePoint;
+
+    fn add(self, other: ProjectivePoint) -> ProjectivePoint {
+        ProjectivePoint::add(&self, &other)
     }
 }
 
@@ -410,42 +437,6 @@ impl SubAssign<&AffinePoint> for ProjectivePoint {
     }
 }
 
-impl Mul<Scalar> for ProjectivePoint {
-    type Output = ProjectivePoint;
-
-    fn mul(self, other: Scalar) -> ProjectivePoint {
-        ProjectivePoint::mul(&self, &other)
-    }
-}
-
-impl Mul<&Scalar> for &ProjectivePoint {
-    type Output = ProjectivePoint;
-
-    fn mul(self, other: &Scalar) -> ProjectivePoint {
-        ProjectivePoint::mul(self, other)
-    }
-}
-
-impl Mul<&Scalar> for ProjectivePoint {
-    type Output = ProjectivePoint;
-
-    fn mul(self, other: &Scalar) -> ProjectivePoint {
-        ProjectivePoint::mul(&self, other)
-    }
-}
-
-impl MulAssign<Scalar> for ProjectivePoint {
-    fn mul_assign(&mut self, rhs: Scalar) {
-        *self = ProjectivePoint::mul(self, &rhs);
-    }
-}
-
-impl MulAssign<&Scalar> for ProjectivePoint {
-    fn mul_assign(&mut self, rhs: &Scalar) {
-        *self = ProjectivePoint::mul(self, rhs);
-    }
-}
-
 impl Neg for ProjectivePoint {
     type Output = ProjectivePoint;
 
@@ -464,8 +455,11 @@ impl<'a> Neg for &'a ProjectivePoint {
 
 #[cfg(test)]
 mod tests {
-    use super::{AffinePoint, ProjectivePoint, Scalar};
-    use crate::test_vectors::group::{ADD_TEST_VECTORS, MUL_TEST_VECTORS};
+    use super::{AffinePoint, ProjectivePoint};
+    use crate::{
+        test_vectors::group::{ADD_TEST_VECTORS, MUL_TEST_VECTORS},
+        Scalar,
+    };
     use elliptic_curve::{ff::PrimeField, generic_array::GenericArray};
 
     #[test]
@@ -568,7 +562,13 @@ mod tests {
     fn projective_add_vs_double() {
         let generator = ProjectivePoint::generator();
 
-        assert_eq!(generator + &generator, generator.double());
+        let r1 = generator + &generator;
+        let r2 = generator.double();
+        assert_eq!(r1, r2);
+
+        let r1 = (generator + &generator) + &(generator + &generator);
+        let r2 = generator.double().double();
+        assert_eq!(r1, r2);
     }
 
     #[test]
@@ -589,7 +589,6 @@ mod tests {
     #[test]
     fn projective_double_and_sub() {
         let generator = ProjectivePoint::generator();
-
         assert_eq!(generator.double() - &generator, generator);
     }
 
@@ -600,7 +599,7 @@ mod tests {
         for (k, coords) in ADD_TEST_VECTORS
             .iter()
             .enumerate()
-            .map(|(k, coords)| (Scalar::from(k as u64 + 1), *coords))
+            .map(|(k, coords)| (Scalar::from(k as u32 + 1), *coords))
             .chain(MUL_TEST_VECTORS.iter().cloned().map(|(k, x, y)| {
                 (
                     Scalar::from_repr(GenericArray::clone_from_slice(&hex::decode(k).unwrap()[..]))

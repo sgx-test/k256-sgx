@@ -1,4 +1,4 @@
-//! secp256r1 test vectors.
+//! secp256k1 test vectors
 
 #[cfg(test)]
 pub mod ecdsa;
